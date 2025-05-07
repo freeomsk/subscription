@@ -20,9 +20,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * @param pageable информация о пагинации.
      * @return список объектов, где каждый объект содержит название сервиса и количество подписок.
      */
-    @Query("SELECT s.serviceName, COUNT(s) as subscription_count " +
+    @Query("SELECT s.nameService.serviceName, COUNT(s) " +
             "FROM Subscription s " +
-            "GROUP BY s.serviceName " +
-            "ORDER BY subscription_count DESC")
+            "GROUP BY s.nameService.serviceName " +
+            "ORDER BY COUNT(s) DESC")
     List<Object[]> findTop3Subscriptions(Pageable pageable);
 }

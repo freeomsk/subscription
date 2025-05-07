@@ -30,6 +30,9 @@
 - Разработать docker-compose.yml, который позволит локально запускать проект
   вместе с базой данных.
 
+_Примечание:_
+Для недопущения дублирования наименований сервисов подписок произведена нормализация БД - добавлена таблица _services_
+
 ## Требования к API
 
 _Эндпоинты:_
@@ -70,21 +73,21 @@ _Эндпоинты:_
 
 * Создать подписки для пользователя с id = 1
 
-`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"serviceName": "Netflix"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"nameService": "Netflix"}'`
 
-`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"serviceName": "YouTube Premium"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"nameService": "YouTube Premium"}'`
 
-`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"serviceName": "VK Музыка"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/1 -H "Content-Type: application/json" -d '{"nameService": "VK Музыка"}'`
 
 * Создать подписки для пользователя с id = 2
 
-`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"serviceName": "Netflix"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"nameService": "Netflix"}'`
 
-`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"serviceName": "YouTube Premium"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"nameService": "YouTube Premium"}'`
 
-`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"serviceName": "VK Музыка"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"nameService": "VK Музыка"}'`
 
-`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"serviceName": "Яндекс.Плюс"}'`
+`curl -X POST http://localhost:8081/subscriptions/users/2 -H "Content-Type: application/json" -d '{"nameService": "Яндекс.Плюс"}'`
 
 * Получить подписки пользователя с id = 1
 

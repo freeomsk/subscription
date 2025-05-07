@@ -7,11 +7,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.freeomsk.subscription.dto.SubscriptionDTO;
+import ru.freeomsk.subscription.entity.NameService;
+import ru.freeomsk.subscription.entity.Subscription;
+import ru.freeomsk.subscription.entity.User;
 import ru.freeomsk.subscription.exception.SubscriptionNotBelongToUserException;
 import ru.freeomsk.subscription.exception.SubscriptionNotFoundException;
 import ru.freeomsk.subscription.exception.UserNotFoundException;
-import ru.freeomsk.subscription.entity.Subscription;
-import ru.freeomsk.subscription.entity.User;
+import ru.freeomsk.subscription.repository.ServiceRepository;
 import ru.freeomsk.subscription.repository.SubscriptionRepository;
 import ru.freeomsk.subscription.repository.UserRepository;
 
@@ -27,24 +29,27 @@ public class SubscriptionService {
     private static final Logger logger = LoggerFactory.getLogger(SubscriptionService.class);
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
+    private final ServiceRepository serviceRepository;
 
     /**
-     * Конструктор для создания нового экземпляра SubscriptionService с заданными репозиториями.
+     * Конструктор для создания экземпляра SubscriptionService.
      *
-     * @param subscriptionRepository репозиторий подписок.
-     * @param userRepository репозиторий пользователей.
+     * @param subscriptionRepository репозиторий для работы с подписками.
+     * @param userRepository репозиторий для работы с пользователями.
+     * @param serviceRepository репозиторий для работы с сервисами.
      */
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, UserRepository userRepository) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, UserRepository userRepository, ServiceRepository serviceRepository) {
         this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     /**
-     * Добавляет новую подписку для пользователя.
+     * Добавляет новую подписку для указанного пользователя.
      *
-     * @param userId ID пользователя.
-     * @param subscriptionDTO данные подписки.
-     * @return созданная подписка.
+     * @param userId ID пользователя, для которого добавляется подписка.
+     * @param subscriptionDTO объект, содержащий данные о подписке.
+     * @return объект SubscriptionDTO с данными о созданной подписке.
      * @throws UserNotFoundException если пользователь с указанным ID не найден.
      * @throws DataAccessException если произошла ошибка при доступе к данным.
      */
@@ -52,8 +57,15 @@ public class SubscriptionService {
         logger.info("Добавление подписки для пользователя с ID: {}", userId);
         try {
             User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+            NameService service = serviceRepository.findByServiceName(subscriptionDTO.getServiceName())
+                    .orElseGet(() -> {
+                        NameService newService = new NameService();
+                        newService.setServiceName(subscriptionDTO.getServiceName());
+                        return serviceRepository.save(newService);
+                    });
+
             Subscription subscription = new Subscription();
-            subscription.setServiceName(subscriptionDTO.getServiceName());
+            subscription.setNameService(service);
             subscription.setUser(user);
             Subscription createdSubscription = subscriptionRepository.save(subscription);
             subscriptionDTO.setId(createdSubscription.getId());
@@ -69,10 +81,10 @@ public class SubscriptionService {
     }
 
     /**
-     * Получает все подписки пользователя.
+     * Получает список подписок для указанного пользователя.
      *
-     * @param userId ID пользователя.
-     * @return список подписок пользователя.
+     * @param userId ID пользователя, для которого нужно получить подписки.
+     * @return список объектов SubscriptionDTO, представляющих подписки пользователя.
      * @throws UserNotFoundException если пользователь с указанным ID не найден.
      * @throws DataAccessException если произошла ошибка при доступе к данным.
      */
@@ -83,7 +95,7 @@ public class SubscriptionService {
             return user.getSubscriptions().stream().map(subscription -> {
                 SubscriptionDTO subscriptionDTO = new SubscriptionDTO();
                 subscriptionDTO.setId(subscription.getId());
-                subscriptionDTO.setServiceName(subscription.getServiceName());
+                subscriptionDTO.setServiceName(subscription.getNameService().getServiceName());
                 subscriptionDTO.setUserId(subscription.getUser().getId());
                 return subscriptionDTO;
             }).collect(Collectors.toList());
@@ -97,12 +109,12 @@ public class SubscriptionService {
     }
 
     /**
-     * Удаляет подписку пользователя.
+     * Удаляет подписку для указанного пользователя.
      *
-     * @param userId ID пользователя.
-     * @param subscriptionId ID подписки.
+     * @param userId ID пользователя, для которого удаляется подписка.
+     * @param subscriptionId ID подписки, которую нужно удалить.
      * @throws SubscriptionNotFoundException если подписка с указанным ID не найдена.
-     * @throws SubscriptionNotBelongToUserException если подписка не принадлежит пользователю.
+     * @throws SubscriptionNotBelongToUserException если подписка не принадлежит указанному пользователю.
      * @throws DataAccessException если произошла ошибка при доступе к данным.
      */
     public void deleteSubscription(Long userId, Long subscriptionId) {
@@ -124,14 +136,14 @@ public class SubscriptionService {
     }
 
     /**
-     * Получает топ подписок по количеству.
+     * Получает популярные подписки по количеству.
      *
-     * @return список названий сервисов топовых подписок.
+     * @return список названий популярных подписок.
      * @throws SubscriptionNotFoundException если подписки не найдены.
      * @throws DataAccessException если произошла ошибка при доступе к данным.
      */
     public List<String> getTopSubscriptions() {
-        logger.info("Получение топовых подписок по количеству");
+        logger.info("Получение популярных подписок по количеству");
         try {
             Pageable topThree = PageRequest.of(0, 3);
             List<Object[]> results = subscriptionRepository.findTop3Subscriptions(topThree);
@@ -147,8 +159,8 @@ public class SubscriptionService {
             logger.error("Подписки не найдены", e);
             throw e;
         } catch (DataAccessException e) {
-            logger.error("Ошибка при получении топовых подписок", e);
-            throw new RuntimeException("Ошибка при получении топовых подписок", e);
+            logger.error("Ошибка при получении популярных подписок", e);
+            throw new RuntimeException("Ошибка при получении популярных подписок", e);
         }
     }
 }

@@ -7,21 +7,29 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * Сущность, представляющая подписку.
+ * Представляет сущность подписки в системе подписок.
+ * Этот класс сопоставлен с таблицей "subscriptions" в базе данных.
+ * Каждая подписка связана с пользователем и сервисом.
  */
 @Entity
 @Table(name = "subscriptions")
 public class Subscription {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String serviceName;
-
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "service_id", nullable = false)
+    private NameService nameService;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public Long getId() {
@@ -32,12 +40,12 @@ public class Subscription {
         this.id = id;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public NameService getNameService() {
+        return nameService;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
     public User getUser() {
