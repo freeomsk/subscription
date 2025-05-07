@@ -7,13 +7,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Представляет сущность сервиса в системе подписок.
  * Этот класс сопоставлен с таблицей "services" в базе данных.
  * Каждый сервис имеет уникальный идентификатор и имя.
  */
+@Setter
+@Getter
 @Entity
+@NoArgsConstructor
 @Table(name = "services")
 public class NameService {
 
@@ -26,19 +32,4 @@ public class NameService {
     private String serviceName;
 
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
 }
